@@ -31,6 +31,11 @@ class Superhub:
 	def set(self, oid):
 		return self._generateRequest("snmpSet", {"oid": oid}).json()
 
+	def setPortFilterState(self, state):
+		ret = self.set(f"{mib_dict['port_filter_enabled']}={1 if state else 2};2;") #1 = On, 2 = Off
+		self.set(mib_dict["apply"])
+		return ret
+
 	def __del__(self):
 		self._logout()
 
@@ -64,3 +69,6 @@ class Superhub:
 			if r.status_code == 500: #for some reason seems to work with 500
 				self.cookie_string = ""
 				self.last_login_time = 0
+				return True
+			return False
+		return True
