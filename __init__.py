@@ -31,8 +31,25 @@ class Superhub:
 	def set(self, oid):
 		return self._generateRequest("snmpSet", {"oid": oid}).json()
 
-	def setPortFilterState(self, state):
-		ret = self.set(f"{mib_dict['port_filter_enabled']}={1 if state else 2};2;") #1 = On, 2 = Off
+	#Port filter functions
+	def getIndexOfPortFilter(self, ip_address):
+		all_values = list(self.get(mib_dict["source_ip_start"]).values()) #get all
+		for i in range(len(all_values)):
+			x = all_values[i]
+			if x: #not empty
+				filter_ip = parseIP(x)
+				if filter_ip == ip_address:
+					return i
+		return -1
+
+	def getPortFilterState(self, index):
+		value = list(self.get(mib_dict['port_filter_enabled'][index]).values())
+		if len(value) < 1:
+			return None
+		return True if value[0] == "1" else False
+
+	def setPortFilterState(self, index, state):
+		ret = self.set(f"{mib_dict['port_filter_enabled'][index]}={1 if state else 2};2;") #1 = On, 2 = Off, 6 = Delete
 		self.set(mib_dict["apply"])
 		return ret
 
@@ -45,7 +62,7 @@ class Superhub:
 			query.append(f"{key}={value}")
 		query.append(f"_n={self.n_value}")
 		url = f"http://{self.http_address}/{path}?{'&'.join(query)}"
-		print(url)
+		#print(url)
 		auth_cookie = {"credential": self.cookie_string} if self.cookie_string else {}
 		return requests.get(url, cookies=auth_cookie)
 
