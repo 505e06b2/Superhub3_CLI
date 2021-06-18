@@ -30,7 +30,10 @@ class Superhub:
 		self.cookie_string = ""
 		self.last_login_time = 0
 
-		self._login()
+		try:
+			self._login()
+		except urllib.error.HTTPError: #login creds incorrect
+			pass
 		if self.enable_warnings and not self.cookie_string:
 			print("[WARN] Not logged in")
 
